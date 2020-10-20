@@ -8,7 +8,6 @@ body {
 }
 
 .card {
-  background-image: url(off.webp);
   background-repeat: no-repeat;
   background-size: cover;
 
@@ -26,8 +25,11 @@ body {
   animation-fill-mode: forwards;
 }
 
-.card.flipped {
-  background-image: url(on.webp);
+.card[data-stat="H"] {
+  background-color: black;
+}
+
+.card:not([data-stat="H"]) {
   opacity: 1;
   transform: rotateY(0deg);
 }

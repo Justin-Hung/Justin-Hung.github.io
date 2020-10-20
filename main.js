@@ -55,6 +55,7 @@ let MSGame = (function(){
           res += c(row+dr,col+dc);
       return res;
     }
+
     sprinkleMines(row, col) {
         // prepare a list of allowed coordinates for mine placement
       let allowed = [];
@@ -94,6 +95,7 @@ let MSGame = (function(){
       console.log("Mines and counts after sprinkling:");
       console.log(mines.join("\n"), "\n");
     }
+
     // uncovers a cell at a given coordinate
     // this is the 'left-click' functionality
     uncover(row, col) {
@@ -160,6 +162,7 @@ let MSGame = (function(){
       }
       return res;
     }
+
     getStatus() {
       let done = this.exploded ||
           this.nuncovered === this.nrows * this.ncols - this.nmines;
@@ -173,6 +176,14 @@ let MSGame = (function(){
         nmines: this.nmines
       }
     }
+
+    getIndex(col, row) {
+      return ((row * this.ncols) + col);
+    }
+
+    getCoordinate(number) {
+      return [number % this.ncols, Math.floor(number / this.ncols)];
+    }
   }
 
   return _MSGame;
@@ -180,64 +191,20 @@ let MSGame = (function(){
 })();
 
 /**
- * flips a single card (if coordinates valid)
- * 
- * @param {state} s 
- * @param {number} col 
- * @param {number} row 
- */
-function flip1( s, col, row) {
-  if( col >= 0 && col < s.cols && row >= 0 && row < s.rows)
-    s.onoff[row * s.rows + col] = ! s.onoff[row * s.rows + col];
-}
-
-/**
- * flip a card with given coordinate and its neigbors
- * 
- * @param {state} s 
- * @param {number} col 
- * @param {number} row 
- */
-function flip( s, col, row) {
-  flip1( s, col, row);
-  flip1( s, col+1, row);
-  flip1( s, col-1, row);
-  flip1( s, col, row+1);
-  flip1( s, col, row-1);
-}
-
-/**
- * makes a solvable state by simulating random flips
- * @param {state} s 
- * @param {number} ncols 
- * @param {number} nrows 
- */
-function make_solvable(s, ncols, nrows) {
-  s.moves = 0;
-  s.onoff = [];
-  for( let i = 0 ; i < s.rows * s.cols ; i ++)
-    s.onoff[i] = false;
-  for( let row = 0 ; row < s.rows ; row ++)
-    for( let col = 0 ; col < s.cols ; col ++)
-      if( Math.random() < 0.5)
-        flip(s, col, row);
-}
-
-/**
  * creates enough cards for largest board (9x9)
  * registers callbacks for cards
  * 
  * @param {state} s 
  */
-function prepare_dom(s) {
+function prepare_dom(game) {
   const grid = document.querySelector(".grid");
-  const nCards = 9 * 9 ; // max grid size
+  const nCards = 16 * 16 ; // max grid size
   for( let i = 0 ; i < nCards ; i ++) {
     const card = document.createElement("div");
     card.className = "card";
     card.setAttribute("data-cardInd", i);
     card.addEventListener("click", () => {
-      card_click_cb( s, card, i);
+      card_click_cb( game, card, i);
     });
     grid.appendChild(card);
   }
@@ -248,23 +215,33 @@ function prepare_dom(s) {
  * - hides unnecessary cards by setting their display: none
  * - adds "flipped" class to cards that were flipped
  * 
- * @param {object} s 
+ * @param {object} game
  */
-function render(s) {
+function render(game) {
   const grid = document.querySelector(".grid");
-  grid.style.gridTemplateColumns = `repeat(${s.cols}, 1fr)`;
+  grid.style.gridTemplateColumns = `repeat(${game.getStatus().ncols}, 1fr)`;
+  
+  const render = game.getRendering();
   for( let i = 0 ; i < grid.children.length ; i ++) {
     const card = grid.children[i];
     const ind = Number(card.getAttribute("data-cardInd"));
-    if( ind >= s.rows * s.cols) {
+    if( ind >= game.getStatus().nrows * game.getStatus().ncols) {
       card.style.display = "none";
     }
     else {
       card.style.display = "block";
-      if(s.onoff[ind])
-        card.classList.add("flipped");
-      else
-        card.classList.remove("flipped");
+      const [col, row] = game.getCoordinate(ind);
+      const status = render[row].charAt(col);
+
+      card.setAttribute("data-stat", status);
+      if(/[1-9|M]/.test(status)){
+        card.innerHTML = `<b>${status}</b>`
+      }
+      
+      // if(game.getIndex)
+        
+      // else
+      //   card.classList.remove("flipped");
     }
   }
   document.querySelectorAll(".moveCount").forEach(
@@ -278,19 +255,18 @@ let clickSound = new Audio("clunk.mp3");
  * callback for clicking a card
  * - toggle surrounding elements
  * - check for winning condition
- * @param {state} s 
+ * @param {Game} game 
  * @param {HTMLElement} card_div 
  * @param {number} ind 
  */
-function card_click_cb(s, card_div, ind) {
-  const col = ind % s.cols;
-  const row = Math.floor(ind / s.cols);
+function card_click_cb(game, card_div, ind) {
+  const [col, row] = game.getCoordinate(ind);
   card_div.classList.toggle("flipped");
-  flip(s, col, row);
-  s.moves ++;
-  render(s);
+
+  game.uncover(row, col);
+  render(game);
   // check if we won and activate overlay if we did
-  if( s.onoff.reduce((res,l)=>res && !l, true)) {
+  if( game.getStatus().done ) {
     document.querySelector("#overlay").classList.toggle("active");
   }
   clickSound.play();
@@ -302,55 +278,50 @@ function card_click_cb(s, card_div, ind) {
  * - generate a solvable state
  * - render the state
  * 
- * @param {state} s 
+ * @param {state} game
  * @param {number} cols 
  * @param {number} rows 
  */
-function button_cb(s, cols, rows) {
-  s.cols = cols;
-  s.rows = rows;
-  make_solvable(s);
-  render(s);
+function button_cb(game, cols, rows, mines) {
+  game.init(rows, cols, mines)
+  render(game);
 }
 
 function main() {
 
-  // create state object
-  let state = {
-    cols: null,
-    rows: null,
-    moves: 0,
-    onoff: []
-  }
+  let game = new MSGame();
+
+  game.init(10, 10, 10);
   
-  // get browser dimensions - not used in thise code
   let html = document.querySelector("html");
   console.log("Your render area:", html.clientWidth, "x", html.clientHeight)
-  
-  // register callbacks for buttons
+
   document.querySelectorAll(".menuButton").forEach((button) =>{
-    [rows,cols] = button.getAttribute("data-size").split("x").map(s=>Number(s));
-    button.innerHTML = `${cols} &#x2715; ${rows}`
-    button.addEventListener("click", button_cb.bind(null, state, cols, rows));
+    [game.nrows,game.ncols,game.nmines] = button.getAttribute("data-size").split("x").map(s=>Number(s));
+    button.innerHTML = `${game.ncols} &#x2715; ${game.nrows}`
+    button.addEventListener("click", button_cb.bind(null, game, game.ncols, game.nrows, game.nmines));
   });
+
 
   // callback for overlay click - hide overlay and regenerate game
   document.querySelector("#overlay").addEventListener("click", () => {
     document.querySelector("#overlay").classList.remove("active");
-    make_solvable(state);
     render(state); 
   });
 
-  // sound callback
-  let soundButton = document.querySelector("#sound");
-  soundButton.addEventListener("change", () => {
-    clickSound.volume = soundButton.checked ? 0 : 1;
-  });
+  prepare_dom( game );
+
+  button_cb(game, 10, 10, 10);
+
+  // // sound callback
+  // let soundButton = document.querySelector("#sound");
+  // soundButton.addEventListener("change", () => {
+  //   clickSound.volume = soundButton.checked ? 0 : 1;
+  // });
 
 
-  // create enough cards for largest game and register click callbacks
-  prepare_dom( state);
+  // // create enough cards for largest game and register click callbacks
 
-  // simulate pressing 4x4 button to start new game
-  button_cb(state, 4, 4);
+  // // simulate pressing 4x4 button to start new game
+  // button_cb(state, 4, 4);
 }
