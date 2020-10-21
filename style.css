@@ -4,7 +4,7 @@
 }
 
 body {
-  background: lightpink;
+  background: rgb(255, 169, 244);
 }
 
 .card {
@@ -26,21 +26,27 @@ body {
   justify-content: center;
 }
 
+.card:not([data-stat="H"]) {
+  opacity: 1;
+  transform: rotateY(0deg);
+  background-color: rgb(255, 128, 249);
+}
+
 .card[data-stat="H"] {
-  background-color: lightblue;
+  background-color: rgb(207, 126, 245);
 }
 
 .card[data-stat="F"] {
-  background-color: lightblue;
+  background-color:rgb(200, 118, 238);
 }
 
 .card:not([data-stat="H"])::before {
   padding-bottom: 0%;
 }
 
-.card:not([data-stat="H"]) {
-  opacity: 1;
-  transform: rotateY(0deg);
+.timer {
+  margin-top: 5px;
+  text-align: center;
 }
 
 .grid {
@@ -51,6 +57,7 @@ body {
   padding:5px;
   width: calc(70vh);
   height: calc(70vh);
+  border: 2px solid rgb(167, 61, 144);;
 }
 
 .grid > div::before {

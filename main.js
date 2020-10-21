@@ -245,6 +245,10 @@ function render(game) {
       if (status === 'F') {
         card.innerHTML = `<b>🚩</b>`;
       }
+
+      if (status === 'M') {
+        card.innerHTML = `<b>✨</b>`
+      }
     }
   }
   document.querySelectorAll(".moveCount").forEach(
@@ -308,7 +312,33 @@ function card_click_rb(game, card_div, ind) {
 function button_cb(game, cols, rows, mines) {
   game.init(rows, cols, mines)
   render(game);
+  setInterval(startTimer, 1000);
 }
+
+var totalSeconds = 0;
+var minutesLabel = document.getElementById("minutes");
+var secondsLabel = document.getElementById("seconds");
+
+function startTimer()
+{ 
+  ++totalSeconds;
+  secondsLabel.innerHTML = checkzero(totalSeconds%60);
+  minutesLabel.innerHTML = checkzero(parseInt(totalSeconds/60));
+}
+
+function checkzero(val)
+{
+  var valString = val + "";
+  if(valString.length < 2)
+  {
+      return "0" + valString;
+  }
+  else
+  {
+      return valString;
+  }
+}
+
 
 function main() {
 
@@ -320,7 +350,7 @@ function main() {
   console.log("Your render area:", html.clientWidth, "x", html.clientHeight)
 
   document.querySelectorAll(".menuButton").forEach((button) =>{
-    [game.nrows,game.ncols,game.nmines] = button.getAttribute("data-size").split("x").map(s=>Number(s));
+    [game.nrows, game.ncols, game.nmines] = button.getAttribute("data-size").split("x").map(s=>Number(s));
     game.nmines == 10 ? button.innerHTML = `Easy` : button.innerHTML = `Hard`;
     button.addEventListener("click", button_cb.bind(null, game, game.ncols, game.nrows, game.nmines));
   });
