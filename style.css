@@ -49,6 +49,10 @@ body {
   text-align: center;
 }
 
+.flag {
+    margin-top: 5px;
+  text-align: center;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
@@ -124,11 +128,42 @@ body {
   animation: fadeOut 0.5s;
   animation-fill-mode: forwards;
 }
+
 #overlay * {
   pointer-events: none;
 }
 
 #overlay.active {
+  visibility: visible;
+  animation: fadeIn 0.5s;
+  animation-fill-mode: forwards;
+}
+
+#loseoverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  opacity: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: 0s;
+  transition: all 0s;
+
+  visibility: hidden;
+  animation: fadeOut 0.5s;
+  animation-fill-mode: forwards;
+}
+
+#loseoverlay * {
+  pointer-events: none;
+}
+
+#loseoverlay.active {
   visibility: visible;
   animation: fadeIn 0.5s;
   animation-fill-mode: forwards;

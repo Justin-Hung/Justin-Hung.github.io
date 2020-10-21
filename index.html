@@ -21,10 +21,25 @@
     <label id="colon">:</label>
     <label id="seconds">00</label>
   </div>
+  <div class="flag">
+    <label>🚩 </label>
+    <label id="flagcount">10</label>
+  </div>
   <div id="overlay">
     <div id="overlayin">
       <p class="big glow">Congratulations, you won!!!</p>
-      <p class="darker">It took you <time>00:00:00</time></p>
+      <p class="darker">It took you
+        <label id="min">00</label>
+        <label id="colon">:</label>
+        <label id="sec">00</label>
+      </p>
+      <p class="darker">Click anywhere to start a new game.
+    </div>
+  </div>
+  <div id="loseoverlay">
+    <div id="overlayin">
+      <p class="big glow">You lost!!!</p>
+      <p class="darker">Better luck next time!</p>
       <p class="darker">Click anywhere to start a new game.
     </div>
   </div>

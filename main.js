@@ -105,8 +105,10 @@ let MSGame = (function(){
       if( ! this.validCoord(row,col)) return false;
       // if this is the very first move, populate the mines, but make
       // sure the current cell does not get a mine
-      if( this.nuncovered === 0)
+      if( this.nuncovered === 0){
         this.sprinkleMines(row, col);
+        intervalObj = setInterval(startTimer, 1000);
+      }
       // if cell is not hidden, ignore this move
       if( this.arr[row][col].state !== STATE_HIDDEN) return false;
       // floodfill all 0-count cells
@@ -273,9 +275,21 @@ function card_click_cb(game, card_div, ind) {
   game.uncover(row, col);
   render(game);
   // check if we won and activate overlay if we did
-  if( game.getStatus().done ) {
+  if( game.getStatus().exploded ) {
+    clearInterval(intervalObj);
+    document.querySelector("#loseoverlay").classList.toggle("active");
+  }
+  else if( game.getStatus().done ) {
+    var minLabel = document.getElementById("min");
+    var secLabel = document.getElementById("sec");
+    minLabel.innerHTML = parseInt( minutesLabel.innerHTML );
+    secLabel.innerHTML = parseInt( secondsLabel.innerHTML );
+    clearInterval(intervalObj);
     document.querySelector("#overlay").classList.toggle("active");
   }
+  // else if(game.getStatus().exploded) {
+  //   document.querySelector("#overlay").classList.toggle("active");
+  // }
   clickSound.play();
 }
 
@@ -289,11 +303,21 @@ function card_click_cb(game, card_div, ind) {
  */
 function card_click_rb(game, card_div, ind) {
   const [col, row] = game.getCoordinate(ind);
+  var flaglabel = document.getElementById("flagcount");
+  const status = game.getRendering()[row].charAt(col);
+  
+  if (status === 'F') {
+    flaglabel.innerHTML = parseInt( flaglabel.innerHTML ) + 1;
+  }
+  else if( status === 'H') {
+    flaglabel.innerHTML = parseInt( flaglabel.innerHTML ) - 1;
+  }
 
   game.mark(row, col);
   render(game);
   // check if we won and activate overlay if we did
   if( game.getStatus().done ) {
+    clearInterval(intervalObj);
     document.querySelector("#overlay").classList.toggle("active");
   }
   clickSound.play();
@@ -311,10 +335,16 @@ function card_click_rb(game, card_div, ind) {
  */
 function button_cb(game, cols, rows, mines) {
   game.init(rows, cols, mines)
+  minecount = mines;
+  document.getElementById("flagcount").innerHTML = mines;
   render(game);
-  setInterval(startTimer, 1000);
+  totalSeconds = 0;
+  secondsLabel.innerHTML = "00";
+  minutesLabel.innerHTML = "00";
+  clearInterval(intervalObj);
 }
 
+var intervalObj;
 var totalSeconds = 0;
 var minutesLabel = document.getElementById("minutes");
 var secondsLabel = document.getElementById("seconds");
@@ -359,22 +389,14 @@ function main() {
   // callback for overlay click - hide overlay and regenerate game
   document.querySelector("#overlay").addEventListener("click", () => {
     document.querySelector("#overlay").classList.remove("active");
-    render(game); 
+    button_cb(game, game.ncols, game.nrows, game.nmines);
+  });
+  document.querySelector("#loseoverlay").addEventListener("click", () => {
+    document.querySelector("#loseoverlay").classList.remove("active");
+    button_cb(game, game.ncols, game.nrows, game.nmines);
   });
 
   prepare_dom( game );
 
   button_cb(game, 10, 10, 10);
-
-  // // sound callback
-  // let soundButton = document.querySelector("#sound");
-  // soundButton.addEventListener("change", () => {
-  //   clickSound.volume = soundButton.checked ? 0 : 1;
-  // });
-
-
-  // // create enough cards for largest game and register click callbacks
-
-  // // simulate pressing 4x4 button to start new game
-  // button_cb(state, 4, 4);
 }
