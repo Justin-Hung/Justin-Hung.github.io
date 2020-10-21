@@ -1,10 +1,10 @@
 * {
   font-family: Impact;
-  font-size: 1.3rem;
+  font-size: 100%;
 }
 
 body {
-  background: rgb(255, 237, 179);
+  background: lightpink;
 }
 
 .card {
@@ -14,10 +14,8 @@ body {
   width: auto;
   height: auto;
 
-  border-radius: 10%;
-  border: none;
-  margin: 2px;
-  transition:.25s;
+  border: 2px solid #11111155;
+  transition: 0.25s;
   opacity: 0.9;
   transform: rotateY(180deg);
 
@@ -26,7 +24,15 @@ body {
 }
 
 .card[data-stat="H"] {
-  background-color: black;
+  background-color: lightblue;
+}
+
+.card[data-stat="F"] {
+  background-color: lightblue;
+}
+
+.card:not([data-stat="H"])::before {
+  padding-bottom: 0%;
 }
 
 .card:not([data-stat="H"]) {
@@ -37,9 +43,11 @@ body {
 .grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
   border-radius: 10px;
   padding:5px;
   width: calc(70vh);
+  height: calc(70vh);
 }
 
 .grid > div::before {

@@ -26,7 +26,7 @@ let MSGame = (function(){
 
   class _MSGame {
     constructor() {
-      this.init(8,10,10); // easy
+      this.init(10,10,10); // easy
     }
 
     validCoord(row, col) {
@@ -40,6 +40,7 @@ let MSGame = (function(){
       this.nmarked = 0;
       this.nuncovered = 0;
       this.exploded = false;
+
       // create an array
       this.arr = array2d(
         nrows, ncols,
@@ -185,7 +186,6 @@ let MSGame = (function(){
       return [number % this.ncols, Math.floor(number / this.ncols)];
     }
   }
-
   return _MSGame;
 
 })();
@@ -194,7 +194,7 @@ let MSGame = (function(){
  * creates enough cards for largest board (9x9)
  * registers callbacks for cards
  * 
- * @param {state} s 
+ * @param {state} game
  */
 function prepare_dom(game) {
   const grid = document.querySelector(".grid");
@@ -206,6 +206,10 @@ function prepare_dom(game) {
     card.addEventListener("click", () => {
       card_click_cb( game, card, i);
     });
+    card.addEventListener("contextmenu", (e) => {
+      card_click_rb( game, card, i);
+      e.preventDefault();
+    }, false);
     grid.appendChild(card);
   }
 }
@@ -220,6 +224,7 @@ function prepare_dom(game) {
 function render(game) {
   const grid = document.querySelector(".grid");
   grid.style.gridTemplateColumns = `repeat(${game.getStatus().ncols}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${game.getStatus().nrows}, 1fr)`;
   
   const render = game.getRendering();
   for( let i = 0 ; i < grid.children.length ; i ++) {
@@ -234,19 +239,16 @@ function render(game) {
       const status = render[row].charAt(col);
 
       card.setAttribute("data-stat", status);
-      if(/[1-9|M]/.test(status)){
-        card.innerHTML = `<b>${status}</b>`
-      }
+      card.innerHTML = /[1-9|M]/.test(status) ? `<b>${status}</b>` : '';
       
-      // if(game.getIndex)
-        
-      // else
-      //   card.classList.remove("flipped");
+      if (status === 'F') {
+        card.innerHTML = `<b>🚩</b>`;
+      }
     }
   }
   document.querySelectorAll(".moveCount").forEach(
     (e)=> {
-      e.textContent = String(s.moves);
+      e.textContent = String(game.moves);
     });
 }
 let clickSound = new Audio("clunk.mp3");
@@ -264,6 +266,26 @@ function card_click_cb(game, card_div, ind) {
   card_div.classList.toggle("flipped");
 
   game.uncover(row, col);
+  render(game);
+  // check if we won and activate overlay if we did
+  if( game.getStatus().done ) {
+    document.querySelector("#overlay").classList.toggle("active");
+  }
+  clickSound.play();
+}
+
+/**
+ * callback for clicking a card
+ * - toggle surrounding elements
+ * - check for winning condition
+ * @param {Game} game 
+ * @param {HTMLElement} card_div 
+ * @param {number} ind 
+ */
+function card_click_rb(game, card_div, ind) {
+  const [col, row] = game.getCoordinate(ind);
+
+  game.mark(row, col);
   render(game);
   // check if we won and activate overlay if we did
   if( game.getStatus().done ) {
@@ -298,7 +320,7 @@ function main() {
 
   document.querySelectorAll(".menuButton").forEach((button) =>{
     [game.nrows,game.ncols,game.nmines] = button.getAttribute("data-size").split("x").map(s=>Number(s));
-    button.innerHTML = `${game.ncols} &#x2715; ${game.nrows}`
+    game.nmines == 10 ? button.innerHTML = `Easy` : button.innerHTML = `Hard`;
     button.addEventListener("click", button_cb.bind(null, game, game.ncols, game.nrows, game.nmines));
   });
 
@@ -306,7 +328,7 @@ function main() {
   // callback for overlay click - hide overlay and regenerate game
   document.querySelector("#overlay").addEventListener("click", () => {
     document.querySelector("#overlay").classList.remove("active");
-    render(state); 
+    render(game); 
   });
 
   prepare_dom( game );
