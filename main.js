@@ -234,12 +234,13 @@ function render(game) {
       card.style.display = "none";
     }
     else {
-      card.style.display = "block";
+      card.style.display = "flex";
       const [col, row] = game.getCoordinate(ind);
       const status = render[row].charAt(col);
 
       card.setAttribute("data-stat", status);
-      card.innerHTML = /[1-9|M]/.test(status) ? `<b>${status}</b>` : '';
+      let colors = ['blue','green','red','purple','brown','black','black','blue'];
+      card.innerHTML = /[1-8|M]/.test(status) ? `<b style='color:`+colors[status-1]+`'>${status}</b>` : '';
       
       if (status === 'F') {
         card.innerHTML = `<b>🚩</b>`;

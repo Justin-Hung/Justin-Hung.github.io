@@ -21,6 +21,9 @@ body {
 
   animation: fadeIn 0.5s;
   animation-fill-mode: forwards;
+
+  align-items: center;
+  justify-content: center;
 }
 
 .card[data-stat="H"] {
