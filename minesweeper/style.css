@@ -4,7 +4,7 @@
 }
 
 body {
-  background: lightpink;
+  background: rgb(255, 169, 244);
 }
 
 .card {
@@ -21,25 +21,38 @@ body {
 
   animation: fadeIn 0.5s;
   animation-fill-mode: forwards;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.card:not([data-stat="H"]) {
+  opacity: 1;
+  transform: rotateY(0deg);
+  background-color: rgb(255, 128, 249);
 }
 
 .card[data-stat="H"] {
-  background-color: lightblue;
+  background-color: rgb(207, 126, 245);
 }
 
 .card[data-stat="F"] {
-  background-color: lightblue;
+  background-color:rgb(200, 118, 238);
 }
 
 .card:not([data-stat="H"])::before {
   padding-bottom: 0%;
 }
 
-.card:not([data-stat="H"]) {
-  opacity: 1;
-  transform: rotateY(0deg);
+.timer {
+  margin-top: 5px;
+  text-align: center;
 }
 
+.flag {
+    margin-top: 5px;
+  text-align: center;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
@@ -48,6 +61,7 @@ body {
   padding:5px;
   width: calc(70vh);
   height: calc(70vh);
+  border: 2px solid rgb(167, 61, 144);;
 }
 
 .grid > div::before {
@@ -114,11 +128,42 @@ body {
   animation: fadeOut 0.5s;
   animation-fill-mode: forwards;
 }
+
 #overlay * {
   pointer-events: none;
 }
 
 #overlay.active {
+  visibility: visible;
+  animation: fadeIn 0.5s;
+  animation-fill-mode: forwards;
+}
+
+#loseoverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  opacity: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: 0s;
+  transition: all 0s;
+
+  visibility: hidden;
+  animation: fadeOut 0.5s;
+  animation-fill-mode: forwards;
+}
+
+#loseoverlay * {
+  pointer-events: none;
+}
+
+#loseoverlay.active {
   visibility: visible;
   animation: fadeIn 0.5s;
   animation-fill-mode: forwards;
