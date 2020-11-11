@@ -10,16 +10,14 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+    //username msg and chat array
     socket.on('cookie username', (msg) => {
-        console.log('cookie msg: ' + msg);
         cookieUsername = msg; 
         let username = '';
         
-        if( cookieUsername !== '' ) {
+        if( cookieUsername !== '' && !usernameArray.includes(username) ) {
             username = cookieUsername;
-            if ( !usernameArray.includes(username) ) {
-                usernameArray.push(cookieUsername);
-            }
+            usernameArray.push(cookieUsername);
         }
         else {
             username = generateUsername();
@@ -44,6 +42,10 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
+    });
+
+    socket.on('disconnect username', (disconnectUser) => {
+        removeFromUsernameArray(disconnectUser);
     });
 });
 
@@ -81,4 +83,10 @@ function generateUsername() {
     return username; 
 }
 
-
+function removeFromUsernameArray(username) {
+    for( let i = 0 ; i < usernameArray.length ; i++ ) {
+        if( username === usernameArray[i] ) {
+            usernameArray.splice(i, 1);
+        }
+    }
+}

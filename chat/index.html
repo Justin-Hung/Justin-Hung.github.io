@@ -32,7 +32,7 @@
                 e.preventDefault(); // prevents page reloading
                 socket.emit('chat message', officialUsername + ': ' + $('#m').val());
                 $('#m').val('');
-                return false;
+                return false; 
             });
 
             socket.on('username message', function(username){
@@ -53,6 +53,11 @@
                 $('#messages').append($('<li>').text(messageObject.hour + ':' + messageObject.minute + ' ' 
                     + messageObject.msg ));
             });
+
+            socket.on('disconnect', () => {
+                socket.emit('disconnect username', officialUsername)
+                console.log('disconnected by user: ' + officialUsername)
+            })
             
             function setUsernameCookie(username, expireDays) {
                 let date = new Date();
