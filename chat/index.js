@@ -28,16 +28,23 @@ io.on('connection', (socket) => {
     });
 
     //messaging
-    socket.on('chat message', (msg) => {
-        message = checkForEmojis(msg);
-        let date = new Date(); 
-        let chatObject = {
-            hour: date.getHours(),
-            minute: padZero(date.getMinutes()),
-            msg: message
+    socket.on('chat message', (fullmsg) => {
+        let username = fullmsg.substr( 0, fullmsg.indexOf(':') );
+        let msg = fullmsg.substr( fullmsg.indexOf(' ') + 1 );  
+        if ( msg.startsWith('/') ) {
+            handleCommands(msg, username, socket);
         }
-        chatArray.push(chatObject);
-        io.emit('chat message', chatObject);
+        else {
+            fullmsg = checkForEmojis(fullmsg);
+            let date = new Date(); 
+            let chatObject = {
+                hour: date.getHours(),
+                minute: padZero(date.getMinutes()),
+                msg: fullmsg
+            }
+            chatArray.push(chatObject);
+            io.emit('chat message', chatObject);
+        }
     });
 
     socket.on('disconnect', () => {
@@ -88,5 +95,26 @@ function removeFromUsernameArray(username) {
         if( username === usernameArray[i] ) {
             usernameArray.splice(i, 1);
         }
+    }
+}
+
+function handleCommands(message, username, socket) {
+    if ( message.substr( 0, message.indexOf(' ') ) === '/name') {
+        changeUsername( username, message.substr( message.indexOf(' ') + 1 ), socket );
+    }
+}
+
+function changeUsername(previousUsername, newUsername, socket) {
+    //finish implementing change username messages and report if username change was successful
+    let isUsernameChanged = false; 
+    if ( !usernameArray.includes(newUsername) ) {
+        removeFromUsernameArray(previousUsername);
+        usernameArray.push(newUsername);
+        isUsernameChanged = true;
+    }
+
+    socket.emit('username change status', isUsernameChanged );
+    if ( isUsernameChanged ) {
+        socket.emit('username message', newUsername );
     }
 }

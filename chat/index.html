@@ -40,6 +40,15 @@
                 officialUsername = username; 
                 setUsernameCookie(officialUsername, 5);
             });
+
+            socket.on('username change status', function(isUsernameChanged){
+                if (isUsernameChanged) {
+                    $('#messages').append($('<li>').text('Username change successfull'));
+                }
+                else {
+                    $('#messages').append($('<li>').text('Username already exists. Sorry!'));
+                }
+            });
             
             socket.on('chat array', function(messageObject){
                 console.log(messageObject);
