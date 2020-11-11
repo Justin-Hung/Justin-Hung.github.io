@@ -10,20 +10,33 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    let generatedUsername = generateUsername();
-    console.log('a user connected: ' + generatedUsername); 
-    socket.emit('username message', generatedUsername);
-    socket.emit('chat array', chatArray);
+    socket.on('cookie username', (msg) => {
+        console.log('cookie msg: ' + msg);
+        cookieUsername = msg; 
+        let username = '';
+        
+        if( cookieUsername !== '' ) {
+            username = cookieUsername;
+            if ( !usernameArray.includes(username) ) {
+                usernameArray.push(cookieUsername);
+            }
+        }
+        else {
+            username = generateUsername();
+        }
+        console.log('a user connected using username: ' + username); 
+        socket.emit('username message', username);
+        socket.emit('chat array', chatArray); 
+    });
 
     //messaging
     socket.on('chat message', (msg) => {
-        msg = checkForEmojis(msg);
+        message = checkForEmojis(msg);
         let date = new Date(); 
         let chatObject = {
-            username: generatedUsername,
             hour: date.getHours(),
             minute: padZero(date.getMinutes()),
-            msg: msg
+            msg: message
         }
         chatArray.push(chatObject);
         io.emit('chat message', chatObject);
@@ -67,4 +80,5 @@ function generateUsername() {
     usernameArray.push(username);
     return username; 
 }
+
 

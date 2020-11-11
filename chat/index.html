@@ -24,31 +24,57 @@
     <script>
         $(function () {
             var socket = io();
+            let cookieUsername = getUsernameCookie(); 
+            let officialUsername = '';
+            socket.emit('cookie username', cookieUsername);
+
             $('form').submit(function(e){
                 e.preventDefault(); // prevents page reloading
-                socket.emit('chat message', $('#m').val());
+                socket.emit('chat message', officialUsername + ': ' + $('#m').val());
                 $('#m').val('');
                 return false;
             });
 
             socket.on('username message', function(username){
                 $('#messages').append($('<li>').text('You are ' + username + '.'));
+                officialUsername = username; 
+                setUsernameCookie(officialUsername, 5);
             });
             
             socket.on('chat array', function(messageObject){
                 console.log(messageObject);
                 for( let i = 0 ; i < messageObject.length ; i++ ) {
                     $('#messages').append($('<li>').text(messageObject[i].hour + ':' + messageObject[i].minute + ' ' 
-                    + messageObject[i].username + ' :'
-                    + messageObject[i].msg ));
+                        + messageObject[i].msg ));
                 }
             });
 
             socket.on('chat message', function(messageObject){
                 $('#messages').append($('<li>').text(messageObject.hour + ':' + messageObject.minute + ' ' 
-                    + messageObject.username + ' :'
                     + messageObject.msg ));
             });
+            
+            function setUsernameCookie(username, expireDays) {
+                let date = new Date();
+                date.setTime(date.getTime() + (expireDays * 24 * 60 * 60 * 1000));
+                let expires = "expires="+date.toUTCString();
+                document.cookie = "username" + "=" + username + ";" + expires + ";path=/";
+            }
+
+            function getUsernameCookie() {
+                var name = "username" + "=";
+                var ca = document.cookie.split(';');
+                for(var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
         });
     </script>
   </body>
