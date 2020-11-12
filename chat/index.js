@@ -4,6 +4,7 @@ var io = require('socket.io')(http);
 let chatArray = [];
 let usernameId = 1; 
 let usernameArray = [];
+let colorDict = {};
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -18,32 +19,31 @@ io.on('connection', (socket) => {
         if( cookieUsername !== '' && !usernameArray.includes(username) ) {
             username = cookieUsername;
             usernameArray.push(cookieUsername);
+            colorDict[cookieUsername] = "#000000";
         }
         else {
             username = generateUsername();
         }
+
         console.log('a user connected using username: ' + username); 
         socket.emit('username message', username);
-        socket.emit('chat array', chatArray); 
+
+        let chatArrayObject = {
+            isRefresh: false,
+            chatArray: chatArray
+        }
+        socket.emit('chat array', chatArrayObject); 
     });
 
     //messaging
     socket.on('chat message', (fullmsg) => {
         let username = fullmsg.substr( 0, fullmsg.indexOf(':') );
-        let msg = fullmsg.substr( fullmsg.indexOf(' ') + 1 );  
+        let msg = fullmsg.substr( username.length + 2 );  
         if ( msg.startsWith('/') ) {
-            handleCommands(msg, username, socket);
+            handleCommands(msg, username, socket, io);
         }
         else {
-            fullmsg = checkForEmojis(fullmsg);
-            let date = new Date(); 
-            let chatObject = {
-                hour: date.getHours(),
-                minute: padZero(date.getMinutes()),
-                msg: fullmsg
-            }
-            chatArray.push(chatObject);
-            io.emit('chat message', chatObject);
+            sendMessage( username, msg, io );
         }
     });
 
@@ -59,6 +59,20 @@ io.on('connection', (socket) => {
 http.listen(3000, () => {
   console.log('listening on *:3000');
 });
+
+function sendMessage( username, msg, io ) {
+    msg = checkForEmojis(msg);
+    let date = new Date(); 
+    let chatObject = {
+        hour: date.getHours(),
+        minute: padZero(date.getMinutes()),
+        username: username,
+        color: colorDict[username],
+        msg: msg
+    }
+    chatArray.push(chatObject);
+    io.emit('chat message', chatObject);
+}
 
 function checkForEmojis( message ) {
     message = message.split(':)').join('😁');
@@ -87,10 +101,12 @@ function generateUsername() {
     }
 
     usernameArray.push(username);
+    colorDict[username] = "#000000";
     return username; 
 }
 
 function removeFromUsernameArray(username) {
+    delete colorDict[username];
     for( let i = 0 ; i < usernameArray.length ; i++ ) {
         if( username === usernameArray[i] ) {
             usernameArray.splice(i, 1);
@@ -98,16 +114,23 @@ function removeFromUsernameArray(username) {
     }
 }
 
-function handleCommands(message, username, socket) {
-    if ( message.substr( 0, message.indexOf(' ') ) === '/name') {
-        changeUsername( username, message.substr( message.indexOf(' ') + 1 ), socket );
+function handleCommands(message, username, socket, io) {
+    let command = message.substr( 0, message.indexOf(' ') );
+    let commandValue = message.substr( message.indexOf(' ') + 1 );
+    switch (command) {
+        case '/name':
+            changeUsername( username, commandValue, socket );
+            break;
+        case '/color':
+            changeColor(username, commandValue, io);
+            break;
     }
 }
 
 function changeUsername(previousUsername, newUsername, socket) {
-    //finish implementing change username messages and report if username change was successful
     let isUsernameChanged = false; 
     if ( !usernameArray.includes(newUsername) ) {
+        colorDict[newUsername] = colorDict[previousUsername];
         removeFromUsernameArray(previousUsername);
         usernameArray.push(newUsername);
         isUsernameChanged = true;
@@ -117,4 +140,19 @@ function changeUsername(previousUsername, newUsername, socket) {
     if ( isUsernameChanged ) {
         socket.emit('username message', newUsername );
     }
+}
+
+function changeColor(username, color, io) {
+    colorDict[username] = "#" + color;
+    for (let i = 0; i < chatArray.length; i++) {
+        if ( username === chatArray[i].username ) {
+            chatArray[i].color = "#" + color; 
+        }
+    }
+    
+    let chatArrayObject = {
+        isRefresh: true,
+        chatArray: chatArray
+    }
+    io.emit('chat array', chatArrayObject); 
 }

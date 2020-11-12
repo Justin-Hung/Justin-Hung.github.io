@@ -50,24 +50,39 @@
                 }
             });
             
-            socket.on('chat array', function(messageObject){
-                console.log(messageObject);
+            socket.on('chat array', function(chatArray){
+                if (chatArray.isRefresh) {
+                    $('#messages').empty();
+                }
+
+                let messageObject = chatArray.chatArray;
                 for( let i = 0 ; i < messageObject.length ; i++ ) {
-                    $('#messages').append($('<li>').text(messageObject[i].hour + ':' + messageObject[i].minute + ' ' 
-                        + messageObject[i].msg ));
+                    let text = messageObject[i].hour + ':' + messageObject[i].minute + ' ' 
+                                + messageObject[i].username + ": " + messageObject[i].msg;
+                    if (messageObject[i].username === officialUsername) {
+                        $('#messages').append($('<li>').append($('<b>').append($('<font color="' + messageObject[i].color + '">').text( text ))));
+                    }
+                    else {
+                        $('#messages').append($('<li>').append($('<font color="' + messageObject[i].color + '">').text( text )));
+                    }
                 }
             });
 
             socket.on('chat message', function(messageObject){
-                $('#messages').append($('<li>').text(messageObject.hour + ':' + messageObject.minute + ' ' 
-                    + messageObject.msg ));
+                let text = messageObject.hour + ':' + messageObject.minute + ' '
+                            + messageObject.username + ": " + messageObject.msg;
+                if (messageObject.username === officialUsername) {
+                    $('#messages').append($('<li>').append($('<b>').append($('<font color="' + messageObject.color + '">').text( text ))));
+                }
+                else {
+                    $('#messages').append($('<li>').append($('<font color="' + messageObject.color + '">').text( text )));
+                }
             });
 
             socket.on('disconnect', () => {
-                socket.emit('disconnect username', officialUsername)
-                console.log('disconnected by user: ' + officialUsername)
-            })
-            
+                socket.emit('disconnect username', officialUsername);
+            });
+
             function setUsernameCookie(username, expireDays) {
                 let date = new Date();
                 date.setTime(date.getTime() + (expireDays * 24 * 60 * 60 * 1000));
