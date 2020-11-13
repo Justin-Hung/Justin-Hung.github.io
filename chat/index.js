@@ -11,7 +11,6 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    
     //username msg and chat array
     socket.on('cookie username', (msg) => {
         cookieUsername = msg; 
@@ -127,18 +126,24 @@ function handleCommands(message, username, socket, io) {
 }
 
 function changeUsername(previousUsername, newUsername, socket) {
-    let isUsernameChanged = false; 
     if ( !usernameArray.includes(newUsername) ) {
         colorDict[newUsername] = colorDict[previousUsername];
-        delete colorDict[username];
+        delete colorDict[previousUsername];
         removeFromUsernameArray(previousUsername);
         usernameArray.push(newUsername);
-        isUsernameChanged = true;
-    }
-
-    socket.emit('username change status', isUsernameChanged );
-    if ( isUsernameChanged ) {
         socket.emit('username message', newUsername );
+
+        for (let i = 0; i < chatArray.length; i++) {
+            if ( previousUsername === chatArray[i].username ) {
+                chatArray[i].username = newUsername; 
+            }
+        }
+
+        let chatArrayObject = {
+            isRefresh: true,
+            chatArray: chatArray
+        }
+        io.emit('chat array', chatArrayObject); 
     }
 }
 
@@ -154,5 +159,6 @@ function changeColor(username, color, io) {
         isRefresh: true,
         chatArray: chatArray
     }
+
     io.emit('chat array', chatArrayObject); 
 }
