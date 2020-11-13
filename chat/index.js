@@ -16,7 +16,10 @@ io.on('connection', (socket) => {
         cookieUsername = msg; 
         let username = '';
         
-        if( cookieUsername !== '' && !usernameArray.includes(username) ) {
+        console.log('cookieUsername', cookieUsername);
+        console.log('isUsernameExist:');
+        console.log(isUsernameExist(cookieUsername))
+        if( cookieUsername !== '' && !isUsernameExist(cookieUsername) ) {
             username = cookieUsername;
             usernameArray.push( {username: cookieUsername, socket: socket.id} );
             console.log('username array on connection: ');
@@ -52,9 +55,6 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('disconnect');
         for (let i = 0 ; i < usernameArray.length; i++) {
-            console.log('socket.id: ', socket.id);
-            console.log('usernameArray[i].socket: ', usernameArray[i].socket);
-
             if (socket.id === usernameArray[i].socket) {
                 console.log('user disconnected: ', usernameArray[i].username);
                 removeFromUsernameArray(usernameArray[i].username);
@@ -103,7 +103,7 @@ function generateUsername(socket) {
     usernameId++;
     
     for( let i = 0 ; i < usernameArray.length ; i++) {
-        if (username === usernameArray[i]) {
+        if (username === usernameArray[i].username) {
             username = 'user' + usernameId;
             usernameId++;
         }
@@ -118,10 +118,13 @@ function generateUsername(socket) {
 function removeFromUsernameArray(username) {
     for( let i = 0 ; i < usernameArray.length ; i++ ) {
         if( username === usernameArray[i].username ) {
+            console.log('removing: ', usernameArray[i]);
             usernameArray.splice(i, 1);
-            console.log('removing: ', usernameArray);
+            break;
         }
     }
+    console.log('username array after remove of username: ', username);
+    console.log(usernameArray);
 }
 
 function handleCommands(message, username, socket, io) {
@@ -138,7 +141,7 @@ function handleCommands(message, username, socket, io) {
 }
 
 function changeUsername(previousUsername, newUsername, socket) {
-    if ( !usernameArray.includes(newUsername) ) {
+    if ( !isUsernameExist(newUsername) ) {
         colorDict[newUsername] = colorDict[previousUsername];
         delete colorDict[previousUsername];
         removeFromUsernameArray(previousUsername);
@@ -175,4 +178,14 @@ function changeColor(username, color, io) {
     }
 
     io.emit('chat array', chatArrayObject); 
+}
+
+
+function isUsernameExist( username ) {
+    for (let i = 0 ; i < usernameArray.length ; i++ ) {
+        if (usernameArray[i].username === username) {
+            return true;
+        }
+    }
+    return false;
 }
