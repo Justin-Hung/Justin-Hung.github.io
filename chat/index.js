@@ -18,10 +18,13 @@ io.on('connection', (socket) => {
         
         if( cookieUsername !== '' && !usernameArray.includes(username) ) {
             username = cookieUsername;
-            usernameArray.push(cookieUsername);
+            usernameArray.push( {username: cookieUsername, socket: socket.id} );
+            console.log('username array on connection: ');
+            console.log(usernameArray);
+            io.emit('update current users', usernameArray);
         }
         else {
-            username = generateUsername();
+            username = generateUsername(socket);
         }
 
         console.log('a user connected using username: ' + username); 
@@ -47,11 +50,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
+        console.log('disconnect');
+        for (let i = 0 ; i < usernameArray.length; i++) {
+            console.log('socket.id: ', socket.id);
+            console.log('usernameArray[i].socket: ', usernameArray[i].socket);
 
-    socket.on('disconnect username', (disconnectUser) => {
-        removeFromUsernameArray(disconnectUser);
+            if (socket.id === usernameArray[i].socket) {
+                console.log('user disconnected: ', usernameArray[i].username);
+                removeFromUsernameArray(usernameArray[i].username);
+                break;
+            }
+        }
+        io.emit('update current users', usernameArray);
     });
 });
 
@@ -88,7 +98,7 @@ function padZero( number ) {
     return number;
 }
 
-function generateUsername() {
+function generateUsername(socket) {
     let username = 'User' + usernameId;
     usernameId++;
     
@@ -99,15 +109,17 @@ function generateUsername() {
         }
     }
 
-    usernameArray.push(username);
+    usernameArray.push({username: username, socket: socket.id});
+    io.emit('update current users', usernameArray);
     colorDict[username] = "#000000";
     return username; 
 }
 
 function removeFromUsernameArray(username) {
     for( let i = 0 ; i < usernameArray.length ; i++ ) {
-        if( username === usernameArray[i] ) {
+        if( username === usernameArray[i].username ) {
             usernameArray.splice(i, 1);
+            console.log('removing: ', usernameArray);
         }
     }
 }
@@ -130,7 +142,9 @@ function changeUsername(previousUsername, newUsername, socket) {
         colorDict[newUsername] = colorDict[previousUsername];
         delete colorDict[previousUsername];
         removeFromUsernameArray(previousUsername);
-        usernameArray.push(newUsername);
+        usernameArray.push({username: newUsername, socket: socket.id});
+        io.emit('update current users', usernameArray);
+
         socket.emit('username message', newUsername );
 
         for (let i = 0; i < chatArray.length; i++) {

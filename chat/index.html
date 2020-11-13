@@ -6,7 +6,7 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       #container { max-width: 960px; margin: auto; }
-      #usernames { float: left; max-width: 200px; }
+      #usernames { float: left; max-width: 200px; list-style-type: none; }
       #m { border: solid black; max-width: 900px; }
       #sendbutton { max-width: 60px; }
       form { position: fixed; bottom: 0; width: 100%; }
@@ -22,7 +22,7 @@
   </head>
   <body>
     <div id='container'>
-        <ul id='usernames'>usernames go here</ul>
+        <ul id='usernames'></ul>
         <div id='therightstuff'>
             <ul id="usernameMessage"></ul>
             <ul id="messages"></ul>
@@ -62,6 +62,14 @@
                 }
                 else {
                     $('#messages').append($('<li>').text('Username already exists. Sorry!'));
+                }
+            });
+
+            socket.on('update current users', function(usernameArray) {
+                $('#usernames').empty();
+                $('#usernames').append($('<li>').text( 'Current Users: ' ));
+                for (let i = 0; i < usernameArray.length; i++) {
+                    $('#usernames').append($('<li>').text( usernameArray[i].username ));
                 }
             });
 
