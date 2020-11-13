@@ -11,6 +11,7 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+    
     //username msg and chat array
     socket.on('cookie username', (msg) => {
         cookieUsername = msg; 
