@@ -66,6 +66,7 @@
                         $('#messages').append($('<li>').append($('<font color="' + messageObject[i].color + '">').text( text )));
                     }
                 }
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
             });
 
             socket.on('chat message', function(messageObject){
@@ -77,6 +78,7 @@
                 else {
                     $('#messages').append($('<li>').append($('<font color="' + messageObject.color + '">').text( text )));
                 }
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
             });
 
             socket.on('disconnect', () => {

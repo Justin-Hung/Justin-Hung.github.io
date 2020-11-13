@@ -19,7 +19,6 @@ io.on('connection', (socket) => {
         if( cookieUsername !== '' && !usernameArray.includes(username) ) {
             username = cookieUsername;
             usernameArray.push(cookieUsername);
-            colorDict[cookieUsername] = "#000000";
         }
         else {
             username = generateUsername();
@@ -106,7 +105,6 @@ function generateUsername() {
 }
 
 function removeFromUsernameArray(username) {
-    delete colorDict[username];
     for( let i = 0 ; i < usernameArray.length ; i++ ) {
         if( username === usernameArray[i] ) {
             usernameArray.splice(i, 1);
@@ -131,6 +129,7 @@ function changeUsername(previousUsername, newUsername, socket) {
     let isUsernameChanged = false; 
     if ( !usernameArray.includes(newUsername) ) {
         colorDict[newUsername] = colorDict[previousUsername];
+        delete colorDict[username];
         removeFromUsernameArray(previousUsername);
         usernameArray.push(newUsername);
         isUsernameChanged = true;
